@@ -9,7 +9,8 @@ addEventListener('fetch', event => {
 async function handleRequest(request) {
 
   // fetch the json variants from the api
-  response = await fetch('https://cfw-takehome.developers.workers.dev/api/variants');
+  const API = 'https://cfw-takehome.developers.workers.dev/api/variants'
+  response = await fetch(API);
   json_response = await response.json();
   vars_arr = json_response['variants'];
 
@@ -18,21 +19,34 @@ async function handleRequest(request) {
   response = await fetch(vars_arr[rand_url]);
 
 
-  // using HTMLRewriter to modify content of some HTML elements */
-  const modified_html = new HTMLRewriter()
+  // using HTMLRewriter to modify content of some HTML elements
+  const MODIFIED_HTML = new HTMLRewriter()
   	.on('title', new ElementHandler("Cloudflare Full-stack Internship Project"))
   	.on('h1#title', new ElementHandler("Mitchell Zeiter's Cloudflare Project"))
-  	.on('p#description', new ElementHandler("Hello! This is my Cloudflare full-stack internship project."))
+    .on('p#description', new ElementHandler(`Hello! Welcome to Page #${rand_url + 1}`))
   	.on('a#url', new ElementHandler("Connect with me on LinkedIn!"))
     .on('a#url', new ElementHandler('https://www.linkedin.com/in/mitchell-zeiter/', 'href'))
-  	.transform(response)
-
   
-  	const modified_html_text = await modified_html.text()
 
-  return new Response(modified_html_text, {
-    headers: { 'Content-type': 'text/html' },
-  })
+
+  	// Persisting variants (cookies)
+  	const NAME = ''
+  	const COOKIE = request.headers.get('cookie')
+
+  	// check if cookie exists for first URL
+  	if (COOKIE && COOKIE.includes(`${NAME}=URL1`)) {
+  	  return MODIFIED_HTML.transform(await fetch(vars_arr[0], request))
+  	}
+  	// check if cookie exists for second URL
+  	else if (COOKIE && COOKIE.includes(`${NAME}=URL2`)) {
+  	  return MODIFIED_HTML.transform(await fetch(vars_arr[1], request))
+  	}
+  	// no cookies exits, so we now set one for this page
+  	else{
+  	  response = new Response(response.body, response)
+      response.headers.append('Set-Cookie', `${NAME}=URL${rand_url + 1}; path=/`)
+      return MODIFIED_HTML.transform(response)
+  	}
 }
 
 
@@ -44,6 +58,7 @@ class ElementHandler {
     this.attribute = attribute
   }
 
+  // setting the new content for the given HTML element
   element(element) {
     if (!this.attribute) {
       element.setInnerContent(this.newContent);
