@@ -10,19 +10,19 @@ async function handleRequest(request) {
 
   // fetch the json variants from the api
   const API = 'https://cfw-takehome.developers.workers.dev/api/variants'
-  response = await fetch(API);
-  json_response = await response.json();
-  vars_arr = json_response['variants'];
+  response = await fetch(API)
+  json_response = await response.json()
+  vars_arr = json_response['variants']
 
   // randomly choose one of the two URL's
-  rand_url = Math.random() < 0.5 ? 0 : 1;
-  response = await fetch(vars_arr[rand_url]);
+  rand_url = Math.random() < 0.5 ? 0 : 1
+  response = await fetch(vars_arr[rand_url])
 
 
   // using HTMLRewriter to modify content of some HTML elements
   const MODIFIED_HTML = new HTMLRewriter()
   	.on('title', new ElementHandler("Cloudflare Full-stack Internship Project"))
-  	.on('h1#title', new ElementHandler("Mitchell Zeiter's Cloudflare Project"))
+    .on('h1#title', new ElementHandler(`Mitchell Zeiter's Project - Page #${rand_url + 1}`))
     .on('p#description', new ElementHandler(`Hello! Welcome to Page #${rand_url + 1}`))
   	.on('a#url', new ElementHandler("Connect with me on LinkedIn!"))
     .on('a#url', new ElementHandler('https://www.linkedin.com/in/mitchell-zeiter/', 'href'))
@@ -61,9 +61,9 @@ class ElementHandler {
   // setting the new content for the given HTML element
   element(element) {
     if (!this.attribute) {
-      element.setInnerContent(this.newContent);
+      element.setInnerContent(this.newContent)
     } else { 
-      element.setAttribute(this.attribute, this.newContent);
+      element.setAttribute(this.attribute, this.newContent)
     }
   }
 }
